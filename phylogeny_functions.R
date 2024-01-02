@@ -1,6 +1,48 @@
-
+#!/usr/env Rscript
 
 #### PACKAGES ####
+if (!require("Biostrings")) {
+  BiocManager::install("Biostrings")
+}
+
+if (!require("microRNA")) {
+  BiocManager::install("microRNA")
+}
+
+if (!require("ggtree")) {
+  BiocManager::install("ggtree")
+}
+
+if (!require("msa")) {
+  BiocManager::install("msa")
+}
+
+if (!require("ggimage")) {
+  BiocManager::install(
+    "ggimage",
+    type = "binary"
+  )
+}
+
+if (!require("YuLab-SMU/ggmsa")) {
+  devtools::install_github(
+    "YuLab-SMU/ggmsa",
+    type = "binary"
+  )
+}
+
+if (!require("treedataverse")) {
+  BiocManager::install(
+    "YuLab-SMU/treedataverse",
+    type = "binary",
+    force = TRUE
+  )
+}
+
+if (!require("usedist")) {
+  devtools::install_github("kylebittinger/usedist")
+}
+
 packages_used <-
   c(
     "tidyverse",
@@ -21,7 +63,14 @@ packages_used <-
     "devtools",
     "ggrepel",
     "haplotypes",
-    "tidytree"
+    "tidytree",
+    "Biostrings",
+    "microRNA",
+    "ggtree",
+    "ggimage",
+    "ggmsa",
+    "treedataverse",
+    "usedist"
   )
 
 packages_to_install <-
@@ -38,48 +87,13 @@ lapply(packages_used,
        character.only = TRUE
 )
 
-
-if (!require("Biostrings")) {
-  BiocManager::install("Biostrings")
-}
-if (!require("microRNA")) {
-  BiocManager::install("microRNA")
-}
-if (!require("ggtree")) {
-  BiocManager::install("ggtree")
-}
-if (!require("ggimage")) {
-  BiocManager::install(
-    "ggimage",
-    type = "binary"
-  )
-}
-
-if (!require("YuLab-SMU/ggmsa")) {
-  devtools::install_github(
-    "YuLab-SMU/ggmsa",
-    type = "binary"
-  )
-}
-if (!require("treedataverse")) {
-  BiocManager::install(
-    "YuLab-SMU/treedataverse",
-    type = "binary",
-    force = TRUE
-  )
-}
-if (!require("usedist")) {
-  devtools::install_github("kylebittinger/usedist")
-}
-
-
-## load required library
-library(Biostrings)
-library(microRNA)
-library(ggtree)
-library(ggimage)
-library(ggmsa)
-library(ggrepel)
+# ## load required library
+# library(Biostrings)
+# library(microRNA)
+# library(ggtree)
+# library(ggimage)
+# library(ggmsa)
+# library(ggrepel)
 
 
 #### Concatonate Fasta Files ####
@@ -117,7 +131,7 @@ concatFastas <-
 # save this file in seaview with the name assigned to the `edited_concat_fasta_file` variable
 
 
-uniqueHapsFastaFile <-
+uniqueSeqsFastaFile <-
   function(
     inFilePath = "../data/myfasta.fasta",
     outFilePath = "../output/myfasta_haplotypes.fasta"
@@ -155,7 +169,8 @@ filterSimilarSequences <-
     fasta_keep, 
     fasta_ncbi, 
     outFilePath,
-    threshold) {
+    threshold
+  ) {
     # Load sequences
     my_seqs <- read.fasta(fasta_keep)
     ncbi_seqs <- read.fasta(fasta_ncbi)

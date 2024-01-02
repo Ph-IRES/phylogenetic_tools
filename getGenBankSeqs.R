@@ -48,17 +48,18 @@ if (!require("restez", character.only = TRUE)) {
 
 library(restez)
 
+#### QUERY NCBI ####
 
-getGenBankSeqs <- 
+queryNCBI <- 
   function(
     search_term, 
-    out_genbank_file_path = "./ncbi.gb", 
-    out_fasta_file_path = "./ncbi.fasta", 
-    pattern_filter_out = "", 
-    n_cpu = parallel::detectCores()
+    out_genbank_file_path = "./ncbi.gb"
+    # out_fasta_file_path = "./ncbi.fasta", 
+    # pattern_filter_out = "", 
+    # n_cpu = parallel::detectCores()
   ) {
     
-    #### USER DEFINED VARIABLES ####
+    # #### USER DEFINED VARIABLES ####
     
     # search_term <- '((txid79456[Organism]) AND ("COI" OR "COX1" OR "COXI" OR "CO1" OR "OXIDASE SUBUNIT 1" OR "mitochondrial genome")  NOT ("edna" OR "environmental" OR "chromosome")) OR ((txid603550[Organism:noexp]) AND HQ566727[Accession])'
     # out_genbank_file_path <- "../prj_rotablue_barcoding/output/ischnura_coi_ncbi.gb"
@@ -94,14 +95,14 @@ getGenBankSeqs <-
         by = batch_size
       )
     
-    # #### QUERY GENGANK IF RUNNING FOR 1ST TIME OR CHANGED `search_term` ####
-    #
-    # ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # #RUN THIS EACH TIME YOU CHANGE THE `search_term` VARIABLE
-    # ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #### QUERY GENGANK IF RUNNING FOR 1ST TIME OR CHANGED `search_term` ####
     
-    #
-    # # Create an empty vector to store all records
+    ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #RUN THIS EACH TIME YOU CHANGE THE `search_term` VARIABLE
+    ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+    
+    # Create an empty vector to store all records
     all_records <- ""
     
     # This will fetch the records in batches of 200 at a time using the web history from your search, and write them all into a text file in GenBank format. If you still encounter issues, consider reducing the batch size even further.
@@ -125,18 +126,28 @@ getGenBankSeqs <-
     write(all_records,
           out_genbank_file_path)
     
-    rm(all_records)
+    return(all_records)
     
-    #### WRANGLE GENBANK RECORDS ####
-    
+  }
+
+#### WRANGLE GENBANK RECORDS ####
+
+wrangleGenBank <- 
+  function(
+    in_genbank_file_path = "./ncbi.gb", 
+    pattern_filter_out = "",
+    n_cpu = parallel::detectCores()
+  ) {    
     # REad in and Split "all_records" into individual records
     genbank_records <- 
       paste(
-        readLines(out_genbank_file_path), 
+        readLines(in_genbank_file_path), 
         collapse = "\n"
       ) %>%
       str_split("\n//\n") %>%
       .[[1]]
+    
+    total_records <- length(genbank_records)
     
     # define function to parse genbank format
     parseGenbankRecord <- 
@@ -219,7 +230,7 @@ getGenBankSeqs <-
     # # Set up a parallel plan
     # plan(multisession,
     #      workers = n_cpu -1)
-    
+  
     # Parse each record into one tibble, this takes a little while
     data_genbank <- 
       # future_map_dfr(
@@ -229,13 +240,13 @@ getGenBankSeqs <-
       ) %>%
       # remove non target seqs
       # remove non target seqs
-      dplyr::filter(
-        if_any(
-          everything(),
-          ~ !str_detect(.,
-                        pattern_filter_out) 
-        ) 
-      ) %>%
+      # dplyr::filter(
+      #   if_any(
+      #     everything(),
+      #     ~ !str_detect(.,
+      #                   pattern_filter_out) 
+      #   ) 
+      # ) %>%
       # mild haplotype collapsing prior to alignment
       distinct(
         sequence,
@@ -268,15 +279,26 @@ getGenBankSeqs <-
           !is.na(lat_lon) ~ lat_lon,
           TRUE ~ "unk"),
         fasta_names = str_c(
-          organism,
           accession,
+          organism,
           location,
           sep = " "
         )
       )
     
-    #### CREATE A FASTA FILE FROM TIBBLE ####
+    # write_rds(data_genbank,
+    #           out_rds_file_path)
     
+    return(data_genbank)
+    
+  }
+
+
+#### CREATE A FASTA FILE FROM TIBBLE ####
+
+writeNCBIfasta <- 
+  function(data,
+           out_fasta_file_path){
     # # Open a file to write the FASTA sequences
     # write_connection <- 
     #   file(
@@ -311,12 +333,11 @@ getGenBankSeqs <-
     
     # Write the FASTA sequences to a file
     writeLines(
-      data_genbank %>%
+      data %>%
         select(fasta_names,
                sequence) %>%
         pmap_chr(function(...) format_fasta(fasta_names = ..1, 
                                             sequence = ..2)), 
       out_fasta_file_path
     )
-    
   }
