@@ -5,6 +5,10 @@ if (!require("Biostrings")) {
   BiocManager::install("Biostrings")
 }
 
+if (!require("seqLogo")) {
+  BiocManager::install("seqLogo")
+}
+
 if (!require("microRNA")) {
   BiocManager::install("microRNA")
 }
@@ -43,6 +47,10 @@ if (!require("usedist")) {
   devtools::install_github("kylebittinger/usedist")
 }
 
+if (!require("rMSA")) {
+  devtools::install_github("mhahsler/rMSA")
+}
+
 packages_used <-
   c(
     "tidyverse",
@@ -65,12 +73,14 @@ packages_used <-
     "haplotypes",
     "tidytree",
     "Biostrings",
+    "seqLogo",
     "microRNA",
     "ggtree",
     "ggimage",
     "ggmsa",
     "treedataverse",
-    "usedist"
+    "usedist",
+    "rMSA"
   )
 
 packages_to_install <-
