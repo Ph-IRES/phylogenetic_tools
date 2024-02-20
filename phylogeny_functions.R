@@ -347,11 +347,24 @@ fasta2tree <-
     
     
     
-    #### EDIT BRANCH TIP LABELS ####
     
+    
+    # plot(
+    #   tree_evolModelFit_opt_bs_outgroup,
+    #   main = modeltest_optim.pml_bestfit
+    # )
+    
+    return(tree_evolModelFit_opt_bs_outgroup)
+    
+  }
+
+#### EDIT BRANCH TIP LABELS ####
+
+editTipLabels <-
+  function(tree){
     # change tip names, easier to change it inside the tree data structure than outside
-    tree_evolModelFit_opt_bs_outgroup$tip.label <-
-      tree_evolModelFit_opt_bs_outgroup$tip.label %>%
+    tree$tip.label <-
+      tree$tip.label %>%
       # replace _ with spaces
       str_replace_all(
         "_",
@@ -365,13 +378,7 @@ fasta2tree <-
       str_remove("[\\s_]LT\\-20.*$")  %>%
       str_remove("[\\s_]KSA.*$") 
     
-    # plot(
-    #   tree_evolModelFit_opt_bs_outgroup,
-    #   main = modeltest_optim.pml_bestfit
-    # )
-    
-    return(tree_evolModelFit_opt_bs_outgroup)
-    
+    return(tree)
   }
 
 #### generate basic GGTREE ####
