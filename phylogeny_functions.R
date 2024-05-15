@@ -1,6 +1,9 @@
 #!/usr/env Rscript
 
 #### PACKAGES ####
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
 if (!require("Biostrings")) {
   BiocManager::install("Biostrings")
 }
