@@ -29,19 +29,41 @@ if (!require("msa")) {
 # }
 
 setRepositories(ind=1:2)
-install.packages("ggimage")
 
-if (!require("YuLab-SMU/ggmsa")) {
-  devtools::install_github(
-    "YuLab-SMU/ggmsa",
-    type = "binary"
+packages_used <-
+  c(
+    "ggimage",
+    "devtools",
+    "yulab.utils",
+    "ggmsa",
+    "vctrs"
+  )
+
+packages_to_install <-
+  packages_used[!packages_used %in% installed.packages()[, 1]]
+
+if (length(packages_to_install) > 0) {
+  install.packages(packages_to_install,
+                   Ncpus = parallel::detectCores() - 1
   )
 }
+
+lapply(packages_used,
+       require,
+       character.only = TRUE
+)
+
+# if (!require("YuLab-SMU/ggmsa")) {
+#   devtools::install_github(
+#     "YuLab-SMU/ggmsa",
+#     type = "binary"
+#   )
+# }
 
 if (!require("treedataverse")) {
   BiocManager::install(
     "YuLab-SMU/treedataverse",
-    type = "binary",
+    # type = "binary",
     force = TRUE
   )
 }
