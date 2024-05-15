@@ -21,12 +21,15 @@ if (!require("msa")) {
   BiocManager::install("msa")
 }
 
-if (!require("ggimage")) {
-  BiocManager::install(
-    "ggimage",
-    type = "binary"
-  )
-}
+# if (!require("ggimage")) {
+#   BiocManager::install(
+#     "ggimage",
+#     type = "binary"
+#   )
+# }
+
+setRepositories(ind=1:2)
+install.packages("ggimage")
 
 if (!require("YuLab-SMU/ggmsa")) {
   devtools::install_github(
