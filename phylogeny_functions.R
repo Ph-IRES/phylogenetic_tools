@@ -1,9 +1,6 @@
 #!/usr/env Rscript
 
 #### PACKAGES ####
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
 if (!require("Biostrings")) {
   BiocManager::install("Biostrings")
 }
@@ -24,49 +21,24 @@ if (!require("msa")) {
   BiocManager::install("msa")
 }
 
-# if (!require("ggimage")) {
-#   BiocManager::install(
-#     "ggimage",
-#     type = "binary"
-#   )
-# }
-
-setRepositories(ind=1:2)
-
-packages_used <-
-  c(
+if (!require("ggimage")) {
+  BiocManager::install(
     "ggimage",
-    "devtools",
-    "yulab.utils",
-    "ggmsa",
-    "vctrs"
-  )
-
-packages_to_install <-
-  packages_used[!packages_used %in% installed.packages()[, 1]]
-
-if (length(packages_to_install) > 0) {
-  install.packages(packages_to_install,
-                   Ncpus = parallel::detectCores() - 1
+    type = "binary"
   )
 }
 
-lapply(packages_used,
-       require,
-       character.only = TRUE
-)
-
-# if (!require("YuLab-SMU/ggmsa")) {
-#   devtools::install_github(
-#     "YuLab-SMU/ggmsa",
-#     type = "binary"
-#   )
-# }
+if (!require("YuLab-SMU/ggmsa")) {
+  devtools::install_github(
+    "YuLab-SMU/ggmsa",
+    type = "binary"
+  )
+}
 
 if (!require("treedataverse")) {
   BiocManager::install(
     "YuLab-SMU/treedataverse",
-    # type = "binary",
+    type = "binary",
     force = TRUE
   )
 }
@@ -153,7 +125,8 @@ concatFastas <-
     combined_fasta <- 
       inFilePaths %>%
       map_chr(readr::read_file) %>%
-      paste(collapse = "\n")
+      paste(collapse = "\n") %>%
+      str_remove_all(.,"\r")
     
     # Write the combined content to a new file
     writeLines(
@@ -246,19 +219,25 @@ filterSimilarSequences <-
 #### ALIGN FASTA ####
 alignFastaFile <-
   function(
-    inFilePath = "../data/myfasta.fasta"
+    inFilePath = "../data/myfasta.fasta",
+    outFilePath = "../data/myfasta_aligned.fasta"
   ){
     
     # read in data
-    Biostrings::readDNAStringSet(inFilePath) %>%
-      # Biostrings::readDNAStringSet(outHapsPath) %>%
+    alignment <-
+      Biostrings::readDNAStringSet(inFilePath) %>%
       RNA2DNA() %>%
       # multi-sequence alignment.  Muscle is generally the fastest option here.  Other options are ClustalW and ClustalOmega
       msa(
         method = "Muscle",
         type = "dna",
         verbose = TRUE
-      ) %>%
+      ) 
+    
+    writeXStringSet(DNAStringSet(alignment), 
+                    filepath = outFilePath)
+    
+    alignment %>%
       DNAMultipleAlignment() %>%   # nt format
       msaConvert("phangorn::phyDat") # pd format
   }
@@ -359,6 +338,7 @@ fasta2tree <-
     #### SPECIFY OUTGROUP & ROOT ####
     # this takes the accession number and makes sure that the name of the outgroup matches naming used in tip labels
     
+    
     the_outgroup <-
       tree_evolModelFit_opt_bs$tip.label %>%
       as_tibble() %>%
@@ -368,22 +348,24 @@ fasta2tree <-
                              my_outgroup))) %>%
       pull()
     
-    tree_evolModelFit_opt_bs_outgroup <-
-      unroot(tree_evolModelFit_opt_bs) %>%
-      root(outgroup = the_outgroup)
-    tree_evolModelFit_opt_bs_outgroup
-    
-    
-    
-    
-    
-    # plot(
-    #   tree_evolModelFit_opt_bs_outgroup,
-    #   main = modeltest_optim.pml_bestfit
-    # )
-    
-    return(tree_evolModelFit_opt_bs_outgroup)
-    
+    if(length(the_outgroup) > 0) {
+      tree_evolModelFit_opt_bs_outgroup <-
+        unroot(tree_evolModelFit_opt_bs) %>%
+        root(outgroup = the_outgroup)
+      
+      tree_evolModelFit_opt_bs_outgroup
+      
+      # plot(
+      #   tree_evolModelFit_opt_bs_outgroup,
+      #   main = modeltest_optim.pml_bestfit
+      # )
+      cat("Outgroup found in the tree. Returning the rerooted tree.\n")
+      return(tree_evolModelFit_opt_bs_outgroup)
+    } else {
+      # If the_outgroup is empty, return the original tree without re-rooting
+      cat("Outgroup not found in the tree. Returning the original tree.\n")
+      return(tree_evolModelFit_opt_bs)
+    }
   }
 
 #### EDIT BRANCH TIP LABELS ####
