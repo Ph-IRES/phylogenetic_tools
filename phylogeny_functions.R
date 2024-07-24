@@ -28,7 +28,9 @@ if (!require("ggimage")) {
   )
 }
 
-install.packages("R4RNA", repos = "https://bioconductor.org/packages/3.16/bioc")
+if (!require("R4RNA")) {
+  BiocManager::install("R4RNA")
+}
 
 if (!require("YuLab-SMU/ggmsa")) {
   devtools::install_github(
