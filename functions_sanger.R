@@ -140,7 +140,7 @@ processCuratedAB1 <-
     
     ab1_files <- 
       list.files(ab1_dir, 
-                 pattern = "\\.ab1$", 
+                 pattern = "\\.(ab1|scf)$", 
                  full.names = TRUE)
     
     
@@ -161,8 +161,16 @@ processCuratedAB1 <-
     file_pairs <- list()
     
     for (file in ab1_files) {
-      specimen_id <- sub("(.+)_([A-Z0-9]+[0-9A-Z]+)_(.+)_(.+)\\.ab1$", "\\1", basename(file))
-      primer_type <- sub("(.+)_([A-Z0-9]+[0-9A-Z]+)_(.+)_(.+)\\.ab1$", "\\2", basename(file))
+      
+      #need to fix this to be more compatible with errors in naming or need to fix names of files.
+      # specimen_id <- sub("(.+)_([A-Z0-9]+[0-9A-Z]+)_(.+)_(.+)\\.ab1$", "\\1", basename(file))
+      # primer_type <- sub("(.+)_([A-Z0-9]+[0-9A-Z]+)_(.+)_(.+)\\.ab1$", "\\2", basename(file))
+
+      specimen_id <- sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\1", basename(file)) # specimen id
+      primer_type <- sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\2", basename(file)) # primer
+      # sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\3", basename(file)) # date
+      # sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\4", basename(file)) # well etc
+      # sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\5", basename(file)) # file ext
       
       if (!exists(specimen_id, 
                   where = file_pairs)) {
@@ -190,9 +198,12 @@ processCuratedAB1 <-
       rev_file <- file_pairs_filtered[[specimen]]$rev
       
       # Read sequences
-      fwd_seq <- sangerseqR::read.abif(fwd_file[[1]])@data$PBAS.1
+      # fwd_seq <- sangerseqR::read.abif(fwd_file[[1]])@data$PBAS.1
+      fwd_seq <- sangerseqR::readsangerseq(fwd_file[[1]])@data$PBAS.1
+      
       rev_seq <- 
-        sangerseqR::read.abif(rev_file[[1]])@data$PBAS.1 %>%
+        # sangerseqR::read.abif(rev_file[[1]])@data$PBAS.1 %>%
+        sangerseqR::readsangerseq(rev_file[[1]])@data$PBAS.1 %>%
         DNAString() %>%
         reverseComplement() %>% 
         as.character()
