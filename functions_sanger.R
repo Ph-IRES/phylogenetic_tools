@@ -151,7 +151,8 @@ processCuratedAB1 <-
     # Loop through each AB1 file and read its data
     for(file_path in ab1_files) {
       file_name <- basename(file_path) # Extracts the file name from the path
-      ab1_data_list[[file_name]] <- sangerseqR::read.abif(file_path)
+      # ab1_data_list[[file_name]] <- sangerseqR::read.abif(file_path)
+      ab1_data_list[[file_name]] <- sangerseqR::readsangerseq(file_path)
     }
     
     #### MAKE CONSENSUS SEQUENCES ####
