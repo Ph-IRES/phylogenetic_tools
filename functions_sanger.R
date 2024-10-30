@@ -129,31 +129,36 @@ renameBlastFastaSeqs <-
 #### Process Curated AB1 Files ####
 # prior to running this, must have dir with curated AB1 files
 # the rev ab1 should NOT be reverse and complemented
-processCuratedAB1 <-
+processCuratedSANGER <-
   function(
-    ab1_dir = "../output/sanger_curated_ab1_ischnura_luta/",
+    in_files = "../output/sanger_curated_ab1_ischnura_luta/^.*\\.(ab1|scf)$",
     out_file = "../output/sanger_curated_ab1_ischnura_luta/consensus_sequences.fasta",
     fwd_primer_name = "LCO1490",
     rev_primer_name = "HCO2198"
   ){
     #### READ IN AB1 ####
     
+    # parse glob
+    indir = dirname(in_files)
+    in_file_pattern = basename(in_files)
+    
+    # read in files
     ab1_files <- 
-      list.files(ab1_dir, 
-                 pattern = "\\.(ab1|scf)$", 
+      list.files(indir, 
+                 pattern = in_file_pattern, 
                  full.names = TRUE)
     
     
     
-    # Initialize an empty list to store AB1 data
-    ab1_data_list <- list()
-    
-    # Loop through each AB1 file and read its data
-    for(file_path in ab1_files) {
-      file_name <- basename(file_path) # Extracts the file name from the path
-      # ab1_data_list[[file_name]] <- sangerseqR::read.abif(file_path)
-      ab1_data_list[[file_name]] <- sangerseqR::readsangerseq(file_path)
-    }
+    # # Initialize an empty list to store AB1 data
+    # ab1_data_list <- list()
+    # 
+    # # Loop through each AB1 file and read its data
+    # for(file_path in ab1_files) {
+    #   file_name <- basename(file_path) # Extracts the file name from the path
+    #   # ab1_data_list[[file_name]] <- sangerseqR::read.abif(file_path)
+    #   ab1_data_list[[file_name]] <- sangerseqR::readsangerseq(file_path)
+    # }
     
     #### MAKE CONSENSUS SEQUENCES ####
     
@@ -165,7 +170,7 @@ processCuratedAB1 <-
       #need to fix this to be more compatible with errors in naming or need to fix names of files.
       # specimen_id <- sub("(.+)_([A-Z0-9]+[0-9A-Z]+)_(.+)_(.+)\\.ab1$", "\\1", basename(file))
       # primer_type <- sub("(.+)_([A-Z0-9]+[0-9A-Z]+)_(.+)_(.+)\\.ab1$", "\\2", basename(file))
-
+      
       specimen_id <- sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\1", basename(file)) # specimen id
       primer_type <- sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\2", basename(file)) # primer
       # sub("(.*)[_\\-](.*)[_\\-](\\d{4}-\\d{2}-\\d{2})[_\\-](.+)\\.(ab1|scf)$", "\\3", basename(file)) # date
@@ -199,11 +204,16 @@ processCuratedAB1 <-
       
       # Read sequences
       # fwd_seq <- sangerseqR::read.abif(fwd_file[[1]])@data$PBAS.1
-      fwd_seq <- sangerseqR::readsangerseq(fwd_file[[1]])@data$PBAS.1
+      # fwd_seq <- sangerseqR::readsangerseq(fwd_file[[1]])@data$PBAS.1
+      fwd_seq <- 
+        sangerseqR::readsangerseq(fwd_file[[1]]) %>%
+        primarySeq() %>%
+        as.character()
       
       rev_seq <- 
         # sangerseqR::read.abif(rev_file[[1]])@data$PBAS.1 %>%
-        sangerseqR::readsangerseq(rev_file[[1]])@data$PBAS.1 %>%
+        sangerseqR::readsangerseq(rev_file[[1]]) %>%
+        primarySeq() %>%
         DNAString() %>%
         reverseComplement() %>% 
         as.character()
@@ -268,7 +278,11 @@ processCuratedAB1 <-
                          single_ab1_specimens[[specimen]]$rev)
       
       # Read the sequence from the ab1 file
-      ab1_seq <- sangerseqR::read.abif(ab1_file[[1]])@data$PBAS.1
+      ab1_seq <- 
+        # sangerseqR::read.abif(ab1_file[[1]])@data$PBAS.1
+        sangerseqR::readsangerseq(ab1_file[[1]]) %>%
+        primarySeq() %>%
+        as.character()
       
       # Print the consensus sequence
       consensus_sequences[[specimen]] <- paste(ab1_seq, collapse = "")
@@ -286,3 +300,32 @@ processCuratedAB1 <-
     
   }
 
+processCuratedAB1 <-
+  function(
+    ab1_dir = "../output/sanger_curated_ab1_ischnura_luta/",
+    out_file = "../output/sanger_curated_ab1_ischnura_luta/consensus_sequences.fasta",
+    fwd_primer_name = "LCO1490",
+    rev_primer_name = "HCO2198"
+  ){
+    processCuratedSANGER(
+      indir = ab1_dir,
+      out_file = out_file,
+      fwd_primer_name = fwd_primer_name,
+      rev_primer_name = rev_primer_name
+    )
+  }
+
+processCuratedSCF <-
+  function(
+    scf_dir = "../output/sanger_curated_ab1_ischnura_luta/",
+    out_file = "../output/sanger_curated_ab1_ischnura_luta/consensus_sequences.fasta",
+    fwd_primer_name = "LCO1490",
+    rev_primer_name = "HCO2198"
+  ){
+    processCuratedAB1(
+      ab1_dir = scf_dir,
+      out_file = out_file,
+      fwd_primer_name = fwd_primer_name,
+      rev_primer_name = rev_primer_name
+    )
+  }
