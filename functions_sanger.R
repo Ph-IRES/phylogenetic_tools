@@ -138,9 +138,14 @@ processCuratedSANGER <-
   ){
     #### READ IN AB1 ####
     
-    # parse glob
-    indir = dirname(in_files)
-    in_file_pattern = basename(in_files)
+    # Extract the directory and file pattern using stringr functions
+    if (str_detect(in_files, "/")) {
+      indir <- str_replace(in_files, "/[^/]*$", "")   # Remove everything after the last '/'
+      in_file_pattern <- str_extract(in_files, "[^/]+$")  # Extract everything after the last '/'
+    } else {
+      indir <- "."
+      in_file_pattern <- in_files
+    }
     
     # read in files
     ab1_files <- 
@@ -308,7 +313,12 @@ processCuratedAB1 <-
     rev_primer_name = "HCO2198"
   ){
     processCuratedSANGER(
-      indir = ab1_dir,
+      in_files = 
+        str_c(
+          ab1_dir,
+          "/.*\\.(ab1|scf|AB1|SCF)",
+          sep=""
+          ),
       out_file = out_file,
       fwd_primer_name = fwd_primer_name,
       rev_primer_name = rev_primer_name
@@ -323,7 +333,12 @@ processCuratedSCF <-
     rev_primer_name = "HCO2198"
   ){
     processCuratedAB1(
-      ab1_dir = scf_dir,
+      in_files = 
+        str_c(
+          scf_dir,
+          "/.*\\.(ab1|scf|AB1|SCF)",
+          sep=""
+        ),
       out_file = out_file,
       fwd_primer_name = fwd_primer_name,
       rev_primer_name = rev_primer_name
