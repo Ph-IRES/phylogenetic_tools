@@ -1,44 +1,98 @@
-
-
 #### PACKAGES ####
 
-if(!require("BiocManager", quietly = TRUE)){
+bioc_pkgs <- c(
+  "sangerseqR",
+  "Biostrings",
+  "DECIPHER",
+  "msa"
+)
+
+# CRAN packages
+cran_pkgs <- c(
+  "tidyverse",
+  "ape",
+  "janitor",
+  "pegas"
+)
+
+#github_fallbacks <- c("somePackage" = "owner/somePackage")
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
 
-if (!require("sangerseqR")) {
-  BiocManager::install("sangerseqR")
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman")
 }
 
-if (!require("DECIPHER")) {
-  BiocManager::install("DECIPHER")
+library(pacman)
+
+for (pkg in bioc_pkgs) {
+  # If not installed, install via BiocManager
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    BiocManager::install(pkg, ask = FALSE)
+  }
+  # Load the package after installation attempt
+  library(pkg, character.only = TRUE)
 }
 
-packages_used <-
-  c(
-    "tidyverse",
-    "ape",
-    "janitor",
-    "sangerseqR",
-    "Biostrings",
-    "DECIPHER",
-    "msa",
-    "pegas"
-  )
-
-packages_to_install <-
-  packages_used[!packages_used %in% installed.packages()[, 1]]
-
-if (length(packages_to_install) > 0) {
-  install.packages(packages_to_install,
-                   Ncpus = parallel::detectCores() - 1
-  )
+for (pkg in cran_pkgs) {
+  # First, try installing/loading from CRAN using p_load()
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    pacman::p_load(char = pkg, install = TRUE, update = FALSE, character.only = TRUE)
+  } else {
+    # Already installed, just load
+    library(pkg, character.only = TRUE)
+  }
+  
+  # If STILL not installed, fallback to GitHub if a repo is known
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    if (pkg %in% names(github_fallbacks)) {
+      message(paste("Attempting GitHub install for", pkg))
+      pacman::p_load_gh(github_fallbacks[[pkg]], character.only = TRUE, update = FALSE)
+    } else {
+      warning(paste("Package", pkg, "not found on CRAN, and no GitHub repo specified."))
+    }
+  }
 }
 
-lapply(packages_used,
-       require,
-       character.only = TRUE
-)
+# if(!require("BiocManager", quietly = TRUE)){
+#   install.packages("BiocManager")
+# }
+# 
+# if (!require("sangerseqR")) {
+#   BiocManager::install("sangerseqR")
+# }
+# 
+# if (!require("DECIPHER")) {
+#   BiocManager::install("DECIPHER")
+# }
+# 
+# packages_used <-
+#   c(
+#     "tidyverse",
+#     "ape",
+#     "janitor",
+#     "sangerseqR",
+#     "Biostrings",
+#     "DECIPHER",
+#     "msa",
+#     "pegas"
+#   )
+# 
+# packages_to_install <-
+#   packages_used[!packages_used %in% installed.packages()[, 1]]
+# 
+# if (length(packages_to_install) > 0) {
+#   install.packages(packages_to_install,
+#                    Ncpus = parallel::detectCores() - 1
+#   )
+# }
+# 
+# lapply(packages_used,
+#        require,
+#        character.only = TRUE
+# )
 
 #### rename Sequences from BLaST MSA OUTPUT ####
 
