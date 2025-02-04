@@ -1,106 +1,179 @@
 #!/usr/env Rscript
 
 #### PACKAGES ####
-if (!require("Biostrings")) {
-  BiocManager::install("Biostrings")
-}
 
-if (!require("seqLogo")) {
-  BiocManager::install("seqLogo")
-}
-
-if (!require("microRNA")) {
-  BiocManager::install("microRNA")
-}
-
-if (!require("ggtree")) {
-  BiocManager::install("ggtree")
-}
-
-if (!require("msa")) {
-  BiocManager::install("msa")
-}
-
-if (!require("ggimage")) {
-  BiocManager::install(
-    "ggimage",
-    type = "binary"
-  )
-}
-
-if (!require("R4RNA")) {
-  BiocManager::install("R4RNA")
-}
-
-if (!require("YuLab-SMU/ggmsa")) {
-  devtools::install_github(
-    "YuLab-SMU/ggmsa",
-    type = "binary"
-  )
-}
-
-if (!require("treedataverse")) {
-  BiocManager::install(
-    "YuLab-SMU/treedataverse",
-    type = "binary",
-    force = TRUE
-  )
-}
-
-if (!require("usedist")) {
-  devtools::install_github("kylebittinger/usedist")
-}
-
-if (!require("rMSA")) {
-  devtools::install_github("mhahsler/rMSA")
-}
-
-packages_used <-
-  c(
-    "tidyverse",
-    "BiocManager",
-    "janitor",
-    "phangorn",
-    "styler",
-    "ape",
-    "msa",
-    "tinytex",
-    "igraph",
-    "ips",
-    "seqinr",
-    "ggtext",
-    "bios2mds",
-    "rgl",
-    "RCurl",
-    "devtools",
-    "ggrepel",
-    "haplotypes",
-    "tidytree",
-    "Biostrings",
-    "seqLogo",
-    "microRNA",
-    "ggtree",
-    "ggimage",
-    "ggmsa",
-    "treedataverse",
-    "usedist",
-    "rMSA"
-  )
-
-packages_to_install <-
-  packages_used[!packages_used %in% installed.packages()[, 1]]
-
-if (length(packages_to_install) > 0) {
-  install.packages(packages_to_install,
-                   Ncpus = parallel::detectCores() - 1
-  )
-}
-
-lapply(packages_used,
-       require,
-       character.only = TRUE
+cran_packages <- c(
+  "tidyverse", "BiocManager", "janitor", "phangorn", "styler", "ape",
+  "tinytex", "igraph", "ips", "seqinr", "ggtext", "bios2mds", "rgl",
+  "RCurl", "devtools", "ggrepel", "haplotypes", "tidytree"
 )
 
+special_packages <- list(
+  list(pkg = "Biostrings",    source = "Bioc",   repo = "Biostrings",               install_options = list()),
+  list(pkg = "seqLogo",       source = "Bioc",   repo = "seqLogo",                  install_options = list()),
+  list(pkg = "microRNA",      source = "Bioc",   repo = "microRNA",                 install_options = list()),
+  list(pkg = "ggtree",        source = "Bioc",   repo = "ggtree",                   install_options = list()),
+  list(pkg = "msa",           source = "Bioc",   repo = "msa",                      install_options = list()),
+  list(pkg = "ggimage",       source = "Bioc",   repo = "ggimage",                  install_options = list(type = "binary")),
+  list(pkg = "R4RNA",         source = "Bioc",   repo = "R4RNA",                    install_options = list()),
+  list(pkg = "ggmsa",         source = "GitHub", repo = "YuLab-SMU/ggmsa",           install_options = list(type = "binary")),
+  list(pkg = "treedataverse", source = "Bioc",   repo = "YuLab-SMU/treedataverse",   install_options = list(type = "binary", force = TRUE)),
+  list(pkg = "usedist",       source = "GitHub", repo = "kylebittinger/usedist",     install_options = list()),
+  list(pkg = "rMSA",          source = "GitHub", repo = "mhahsler/rMSA",              install_options = list())
+)
+
+# A helper function that:
+# 1. Attempts to load a package (quietly, without startup messages).
+# 2. If the package is not available, it installs the package using the
+#    specified source (CRAN, Bioc, or GitHub) and installation options.
+# 3. Finally, it attempts to load the package again, printing a clear message
+#    if the package still fails to load.
+load_install_pkg <- function(pkg, source = "CRAN", repo = NULL, install_options = list()) {
+  if (!suppressPackageStartupMessages(require(pkg, character.only = TRUE))) {
+    message("Package '", pkg, "' not found. Attempting installation from ", source, " ...")
+    tryCatch({
+      if (source == "CRAN") {
+        install.packages(pkg, Ncpus = parallel::detectCores() - 1)
+      } else if (source == "Bioc") {
+        do.call(BiocManager::install, c(list(pkg), install_options))
+      } else if (source == "GitHub") {
+        if (is.null(repo)) {
+          stop("For GitHub installation, 'repo' must be specified for package '", pkg, "'.")
+        }
+        do.call(devtools::install_github, c(list(repo), install_options))
+      } else {
+        stop("Unknown installation source '", source, "' for package '", pkg, "'.")
+      }
+    }, error = function(e) {
+      message("Installation of package '", pkg, "' failed: ", e$message)
+    })
+    
+    if (!suppressPackageStartupMessages(require(pkg, character.only = TRUE))) {
+      message("Failed to load package '", pkg, "' even after installation. Please check the installation or try again later.")
+    } else {
+      message("Successfully loaded package '", pkg, "'.")
+    }
+  } else {
+    message("Package '", pkg, "' loaded successfully.")
+  }
+}
+
+# Loop through and process each CRAN package.
+for (pkg in cran_packages) {
+  load_install_pkg(pkg = pkg, source = "CRAN")
+}
+
+# Loop through and process each special package.
+for (pkg_info in special_packages) {
+  load_install_pkg(pkg = pkg_info$pkg,
+                   source = pkg_info$source,
+                   repo = pkg_info$repo,
+                   install_options = pkg_info$install_options)
+}
+
+
+
+
+
+# if (!require("Biostrings")) {
+#   BiocManager::install("Biostrings")
+# }
+# 
+# if (!require("seqLogo")) {
+#   BiocManager::install("seqLogo")
+# }
+# 
+# if (!require("microRNA")) {
+#   BiocManager::install("microRNA")
+# }
+# 
+# if (!require("ggtree")) {
+#   BiocManager::install("ggtree")
+# }
+# 
+# if (!require("msa")) {
+#   BiocManager::install("msa")
+# }
+# 
+# if (!require("ggimage")) {
+#   BiocManager::install(
+#     "ggimage",
+#     type = "binary"
+#   )
+# }
+# 
+# if (!require("R4RNA")) {
+#   BiocManager::install("R4RNA")
+# }
+# 
+# if (!require("YuLab-SMU/ggmsa")) {
+#   devtools::install_github(
+#     "YuLab-SMU/ggmsa",
+#     type = "binary"
+#   )
+# }
+# 
+# if (!require("treedataverse")) {
+#   BiocManager::install(
+#     "YuLab-SMU/treedataverse",
+#     type = "binary",
+#     force = TRUE
+#   )
+# }
+# 
+# if (!require("usedist")) {
+#   devtools::install_github("kylebittinger/usedist")
+# }
+# 
+# if (!require("rMSA")) {
+#   devtools::install_github("mhahsler/rMSA")
+# }
+# 
+# packages_used <-
+#   c(
+#     "tidyverse",
+#     "BiocManager",
+#     "janitor",
+#     "phangorn",
+#     "styler",
+#     "ape",
+#     "msa",
+#     "tinytex",
+#     "igraph",
+#     "ips",
+#     "seqinr",
+#     "ggtext",
+#     "bios2mds",
+#     "rgl",
+#     "RCurl",
+#     "devtools",
+#     "ggrepel",
+#     "haplotypes",
+#     "tidytree",
+#     "Biostrings",
+#     "seqLogo",
+#     "microRNA",
+#     "ggtree",
+#     "ggimage",
+#     "ggmsa",
+#     "treedataverse",
+#     "usedist",
+#     "rMSA"
+#   )
+# 
+# packages_to_install <-
+#   packages_used[!packages_used %in% installed.packages()[, 1]]
+# 
+# if (length(packages_to_install) > 0) {
+#   install.packages(packages_to_install,
+#                    Ncpus = parallel::detectCores() - 1
+#   )
+# }
+# 
+# lapply(packages_used,
+#        require,
+#        character.only = TRUE
+# )
 # ## load required library
 # library(Biostrings)
 # library(microRNA)
