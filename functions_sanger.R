@@ -347,12 +347,23 @@ processCuratedSANGER <-
       consensus_sequences[[specimen]] <- paste(ab1_seq, collapse = "")
       
     }
+                              
+    #dna_seqs <- 
+    #  DNAStringSet(unlist(consensus_sequences)) %>%
+    #  msa() %>% 
+    #  DNAStringSet()
+
+    # Create a DNAStringSet from the consensus sequences
+    dna_seqs <- DNAStringSet(unlist(consensus_sequences))
     
-    dna_seqs <- 
-      DNAStringSet(unlist(consensus_sequences)) %>%
-      msa() %>% 
-      DNAStringSet()
-    
+    # Only run msa() if there is more than one sequence
+    if (length(dna_seqs) > 1) {
+      dna_seqs <- msa(dna_seqs) %>% DNAStringSet()
+    } else {
+      dna_seqs <- dna_seqs %>% DNAStringSet()
+    }
+
+                                
     # Write to a FASTA file
     writeXStringSet(dna_seqs, 
                     filepath = out_file)
