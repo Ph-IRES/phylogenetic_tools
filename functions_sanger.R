@@ -253,7 +253,12 @@ processCuratedSANGER <-
     }
     
     # Filter out specimens without both fwd and rev sequences
-    file_pairs_filtered <- Filter(function(x) length(x$fwd) == 1 && length(x$rev) == 1, file_pairs)
+    file_pairs_filtered <- 
+      Filter(
+        function(x) length(x$fwd) == 1 && 
+          length(x$rev) == 1, 
+        file_pairs
+      )
     
     consensus_sequences <- list()
     
@@ -262,8 +267,6 @@ processCuratedSANGER <-
       rev_file <- file_pairs_filtered[[specimen]]$rev
       
       # Read sequences
-      # fwd_seq <- sangerseqR::read.abif(fwd_file[[1]])@data$PBAS.1
-      # fwd_seq <- sangerseqR::readsangerseq(fwd_file[[1]])@data$PBAS.1
       fwd_seq <- 
         sangerseqR::readsangerseq(fwd_file[[1]]) %>%
         primarySeq() %>%
@@ -274,8 +277,25 @@ processCuratedSANGER <-
         sangerseqR::readsangerseq(rev_file[[1]]) %>%
         primarySeq() %>%
         DNAString() %>%
-        reverseComplement() %>% 
+        # reverseComplement() %>%
         as.character()
+      
+      rev_seq_revcomp <- 
+        # sangerseqR::read.abif(rev_file[[1]])@data$PBAS.1 %>%
+        sangerseqR::readsangerseq(rev_file[[1]]) %>%
+        primarySeq() %>%
+        DNAString() %>%
+        reverseComplement() %>%
+        as.character()
+      
+      # Perform pairwise alignments using a local alignment (or adjust type as needed)
+      score_rev_seq <- pairwiseAlignment(fwd_seq, rev_seq, type = "local", scoreOnly = TRUE)
+      score_rev_sed_revcomp <- pairwiseAlignment(fwd_seq, rev_seq_revcomp, type = "local", scoreOnly = TRUE)
+      
+      # Choose the orientation that gives the higher alignment score
+      if(score_rev_sed_revcomp >= score_rev_seq) {
+        rev_seq <- as.character(rev_seq_revcomp)
+      } 
       
       # First, combine them into a DNAStringSet
       sequences <- 
@@ -287,12 +307,13 @@ processCuratedSANGER <-
         )
       
       # Perform the alignment
-      alignment <- msa(sequences,
-                       method = "ClustalOmega",
-                       type = "dna",
-                       # gapOpening = 100,
-                       # gapExtension = 100,
-                       verbose = TRUE)
+      alignment <- 
+        msa(sequences,
+            method = "ClustalOmega",
+            type = "dna",
+            # gapOpening = 100,
+            # gapExtension = 100,
+            verbose = TRUE)
       
       
       # Calculate the consensus sequence     
@@ -347,12 +368,12 @@ processCuratedSANGER <-
       consensus_sequences[[specimen]] <- paste(ab1_seq, collapse = "")
       
     }
-                              
+    
     #dna_seqs <- 
     #  DNAStringSet(unlist(consensus_sequences)) %>%
     #  msa() %>% 
     #  DNAStringSet()
-
+    
     # Create a DNAStringSet from the consensus sequences
     dna_seqs <- DNAStringSet(unlist(consensus_sequences))
     
@@ -362,8 +383,8 @@ processCuratedSANGER <-
     } else {
       dna_seqs <- dna_seqs %>% DNAStringSet()
     }
-
-                                
+    
+    
     # Write to a FASTA file
     writeXStringSet(dna_seqs, 
                     filepath = out_file)
@@ -383,7 +404,7 @@ processCuratedAB1 <-
           ab1_dir,
           "/.*\\.(ab1|scf|AB1|SCF)",
           sep=""
-          ),
+        ),
       out_file = out_file,
       fwd_primer_name = fwd_primer_name,
       rev_primer_name = rev_primer_name
