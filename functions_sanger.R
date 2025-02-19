@@ -94,6 +94,68 @@ for (pkg in cran_pkgs) {
 #        character.only = TRUE
 # )
 
+
+#### FILTER SEQUENCES FROM RENAMED BLAST MSA OUTPUT ####
+
+filterFastaByAccession <- 
+  function(
+    fasta_file, 
+    ingroup_file, 
+    outgroup_file, 
+    output_file, 
+    use_regex = FALSE
+  ) {
+    # # Check that the ape package is available
+    # if (!requireNamespace("ape", quietly = TRUE)) {
+    #   stop("Package 'ape' is required. Please install it with install.packages('ape').")
+    # }
+    
+    # Remove trailing . followed by one or more digits
+    ingroups <- gsub("\\.[0-9]+$", "", trimws(readLines(ingroup_file)))
+    outgroups <- gsub("\\.[0-9]+$", "", trimws(readLines(outgroup_file)))
+    
+    
+    # # Read the accession numbers from the ingroup and outgroup files
+    # ingroups <- readLines(ingroup_file)
+    # outgroups <- readLines(outgroup_file)
+    # 
+    # # Remove any empty lines and trim whitespace
+    # ingroups <- trimws(ingroups[ingroups != ""])
+    # outgroups <- trimws(outgroups[outgroups != ""])
+    
+    # Combine into a unique set of accession numbers to keep
+    keep_accessions <- unique(c(ingroups, outgroups))
+    
+    # Read the FASTA file (assumes DNA sequences)
+    seqs <- ape::read.dna(fasta_file, format = "fasta")
+    
+    # Filter sequences: check if any accession number appears in the sequence header
+    keep <- 
+      sapply(rownames(seqs), function(header) {
+        any(sapply(keep_accessions, function(acc) {
+          if (use_regex) {
+            grepl(acc, header)
+          } else {
+            grepl(acc, header, fixed = TRUE)
+          }
+        }))
+      })
+    
+    filtered_seqs <- seqs[keep, ]
+    
+    if (length(filtered_seqs) == 0) {
+      warning("No sequences matched the accession numbers provided.")
+    } else {
+      # Write the filtered sequences to the output FASTA file
+      ape::write.dna(filtered_seqs, file = output_file, format = "fasta", nbcol = -1, colsep = "")
+    }
+    
+    return(filtered_seqs)
+  }
+
+
+
+
 #### rename Sequences from BLaST MSA OUTPUT ####
 
 # rename the fasta file downloaded from ncbi blast msa
