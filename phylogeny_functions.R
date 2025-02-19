@@ -233,6 +233,9 @@ uniqueSeqsFastaFile <-
       as.dna() %>%
       haplotypes::as.DNAbin()
     
+    # Ensure unique labels by modifying the row names
+    rownames(data_haplotypes_dnabin) <- make.unique(rownames(data_haplotypes_dnabin), sep = "_")
+    
     write.dna(data_haplotypes_dnabin,
               file = outFilePath,
               format = "fasta"
@@ -334,7 +337,7 @@ fasta2tree <-
     ## test models, select lowest AIC
     data_modeltest <-
       .data_fasta %>%
-      modelTest(
+      phangorn::modelTest(
         model = "all",
         multicore = TRUE,
         mc.cores = n_cpu - 1
