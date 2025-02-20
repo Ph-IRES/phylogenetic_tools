@@ -10,13 +10,13 @@ MacOS computers need to install [XQuartz](https://www.xquartz.org/)
 
 ---
 
-# Installation
+## Installation
 
 Clone this repo to the same directory within which your project repo resides (not inside of your project repo).  This is not yet a package, so we make assumptions about your directory structure to load the functions
 
 ---
 
-# Instructions to Process Sanger Data, Get Seqs from Genbank & Create ML Tree w Bootstraps
+## Instructions to Process Sanger Data, Get Seqs from Genbank & Create ML Tree w Bootstraps
 
 1. [Inspect SANGER chromatograms and edit `*.ab1` or `*.scf` files](howto_edit_ab1.md)
 
