@@ -12,7 +12,7 @@ MacOS computers need to install [XQuartz](https://www.xquartz.org/)
 
 # Instructions to Process Sanger Data, Get Seqs from Genbank & Create ML Tree w Bootstraps
 
-1. [Inspect SANGER chromatograms and edit `*.ab1` files](howto_edit_ab1.md)
+1. [Inspect SANGER chromatograms and edit `*.ab1` or `*.scf` files](howto_edit_ab1.md)
 
 2. Make consensus sequences from curated `*.ab1` files with `processCuratedSANGER()` which is a function in `functions_sanger.R` and is applied in `./scripts/EXAMPLE_ischnura_luta_H3_phylogeny_2025-02-19.R`
 
