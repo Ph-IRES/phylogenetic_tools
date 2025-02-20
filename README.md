@@ -12,21 +12,9 @@ MacOS computers need to install [XQuartz](https://www.xquartz.org/)
 
 # INSTRUCTIONS
 
----
+1. [Inspect SANGER chromatograms and edit `*.ab1` files](howto_edit_ab1.md)
 
-## Copy raw data from `prj_rotablue_data`
-
-_*This script needs to be made*_
-
-Refer to https://github.com/orgs/opihi-partnership/repositories where a similar strategy has already been employed
-
----
-
-## Processing Sanger Sequencing Reads
-
-1. [Inspect chromatograms and edit `*.ab1` files](howto_edit_ab1.md)
-
-2. Make consensus sequences from curated `*.ab1` files with `processCuratedAB1()` which is a function in `functions_sanger.R` and is applied in `ischnura_luta_phylogeny.R`
+2. Make consensus sequences from curated `*.ab1` files with `processCuratedSANGER()` which is a function in `functions_sanger.R` and is applied in `./scripts/EXAMPLE_ischnura_luta_H3_phylogeny_2025-02-19.R`
 
 3. Cull sequences for your phylogeny from GenBank. Use a consensus sequence to query [NCBI Blast](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&LINK_LOC=blasthome) for the most similar sequences
    	* you can vary the number of records returned to increase or decrease the breadth of taxa in your phylogeny
@@ -48,11 +36,17 @@ Refer to https://github.com/orgs/opihi-partnership/repositories where a similar 
 
    Add image.
 
-6. Use the [`wrangle_blast_output.bash`](wrangle_blast_output.bash) script to convert the information in the sequence names to tidy tsv format
+6. Use the [`./scripts/wrangle_blast_output.bash`](./scripts/wrangle_blast_output.bash) script to convert the information in the sequence names to tidy tsv format
 
    ```bash
+   # be sure to navigate to the scripts dir in your repo in linux terminal before running
+   cd scripts
+   
+   # copy the script from phylogenetic tools
+   cp ../../phylogenetic_tools/scripts/wrangle_blast_output.bash .
+   
    # wrangle_blast_output.bash ReplaceThisTextWithTheBlastMsaFastaFilePath > ReplaceThisTextWithTheNewFilePath.tsv
-   bash wrangle_blast_output.bash ../output/sanger_curated_ab1_ischnura_luta_coi/blast_rbd_06_E1_500.fasta > ../output/sanger_curated_ab1_ischnura_luta_coi/blast_rbd_06_E1_500_better.tsv
+   bash wrangle_blast_output.bash ../output/sanger_curated_ab1_ischnura_luta_H3/blast_rbd_06_E1_all_619.fasta > ../output/sanger_curated_ab1_ischnura_luta_H3/blast_rbd_06_E1_all_619.tsv
    ```
 7. Read the aligned NCBI blast sequences into R using the function `renameBlastFastaSeqs()` from `functions_sanger.R`
    	* See `ischnura_luta_phylogeny.R`
