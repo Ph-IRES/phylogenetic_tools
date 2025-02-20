@@ -10,7 +10,7 @@ MacOS computers need to install [XQuartz](https://www.xquartz.org/)
 
 ---
 
-# INSTRUCTIONS
+# Instructions to Process Sanger Data, Get Seqs from Genbank & Create ML Tree w Bootstraps
 
 1. [Inspect SANGER chromatograms and edit `*.ab1` files](howto_edit_ab1.md)
 
