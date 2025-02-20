@@ -1,16 +1,4 @@
-# phylogenetic_tools
-
-These are a collection of R scripts and functions for processing sanger sequences for phylogenetic analysis
-
----
-
-## Dependencies
-
-MacOS computers need to install [XQuartz](https://www.xquartz.org/)
-
----
-
-# INSTRUCTIONS
+# prj_rotablue_barcoding: Scripts
 
 ---
 
@@ -69,4 +57,3 @@ Refer to https://github.com/orgs/opihi-partnership/repositories where a similar 
 12. Use `saveNewickTree()` from [phylogenetic_tools](https://github.com/Ph-IRES/phylogenetic_tools) to output the best maximum likelihood tree to file.
 
 13. Use `figtree` to beautify the tree
-
