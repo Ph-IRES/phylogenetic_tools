@@ -30,8 +30,6 @@ MacOS computers need to install [XQuartz](https://www.xquartz.org/)
 	  ![](markdown_images/blast_taxonomy_damsel-dragonflies.png)
 	  And now we can show as many records as possible on one page and change the format from `Summary` to `Accession List`.  Note that you will only see the accessions for the first page of results and will have to go back to `Summary`, goto next page, and change format to `Accession List` again (repeat as necessary) to get all of the accession numbers.  Copy them into a text file in you directory, such as `accession_list_damsel-dragonflies.txt`. We will use these to filter the MSA fasta downloaded above. You should also get the accession number for the outgroup and save that to `accession_list_damsel-dragonflies_outgroup.txt`.
 
-	  ~[](markdown_images/blast_taxonomy_damsel-dragonflies.png)
-
 5. Open the MSA fasta downloaded in step 3 and remove sequences that have too many missing base calls. Be sure not to delete critical taxa.
 
    Add image.
