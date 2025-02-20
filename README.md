@@ -14,7 +14,7 @@ MacOS computers need to install [XQuartz](https://www.xquartz.org/)
 
 1. [Inspect SANGER chromatograms and edit `*.ab1` or `*.scf` files](howto_edit_ab1.md)
 
-2. Make consensus sequences from curated `*.ab1` files with `processCuratedSANGER()` which is a function in `functions_sanger.R` and is applied in `./scripts/EXAMPLE_ischnura_luta_H3_phylogeny_2025-02-19.R`
+2. Make consensus sequences from curated `*.ab1` or `*.scf` files with `processCuratedSANGER()` which is a function in `functions_sanger.R` and is applied in `./scripts/EXAMPLE_ischnura_luta_H3_phylogeny_2025-02-19.R`
 
 3. Cull sequences for your phylogeny from GenBank. Use a consensus sequence to query [NCBI Blast](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&LINK_LOC=blasthome) for the most similar sequences
    	* you can vary the number of records returned to increase or decrease the breadth of taxa in your phylogeny
