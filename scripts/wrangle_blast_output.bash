@@ -10,6 +10,7 @@ DEFAULT_INFILE="../output/sanger_curated_ab1_ischnura_luta/blast_rbd_06_E1_500.f
 INFILE=${1:-$DEFAULT_INFILE}
 
  cat $INFILE | \
+	tr -d '\r' | \
 	sed 's/^\(>.*$\)/\1@@@@/' | \
 	tr "\n" "\t" | \
 	sed 's/@@@@/\n/g' | \
