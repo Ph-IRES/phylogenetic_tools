@@ -394,9 +394,9 @@ fasta2tree <-
       bootstrap.pml(
         evolModelFit_opt,
         bs = n_bootstraps,
-        optNni = TRUE,
-        multicore = TRUE,
-        mc.cores = n_cpu - 1
+        optNni = TRUE #,
+        #multicore = TRUE,
+        #mc.cores = n_cpu - 1
       )
     
     ## plotBS functions
@@ -409,11 +409,17 @@ fasta2tree <-
       plotBS(
         evolModelFit_opt$tree,
         trees_evolModelFit_opt_bs,
-        p = threshold_bootstraps,
-        digits = 0,
+        p = threshold_bootstraps/100,
+        digits = 2,
         type = "phylogram",
         method = "FBP"
       )
+    
+    # Convert bootstrap support values to values between 0 and 100
+    tree_evolModelFit_opt_bs$node.label <- 
+      (as.numeric(tree_evolModelFit_opt_bs$node.label) * 100) %>% 
+      { ifelse(. < threshold_bootstraps, "", .) } %>%
+      { ifelse(is.na(.), "", .) }
     
     #### SPECIFY OUTGROUP & ROOT ####
     # this takes the accession number and makes sure that the name of the outgroup matches naming used in tip labels
