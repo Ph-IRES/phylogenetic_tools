@@ -104,6 +104,12 @@ tree <-
     my_outgroup = "EU055464"
   )
 
+# save tree as RDS so it could be read in and edited, can read it in with readRDS()
+saveRDS(
+  tree, 
+  file = "../output/sanger_curated_ab1_ischnura_luta_H3/tree_ischnura_luta_filtered_619.rds"
+)
+
 saveNewickTree(tree, 
                "../output/sanger_curated_ab1_ischnura_luta_H3/tree_ischnura_luta_filtered_619.nwk")
 
