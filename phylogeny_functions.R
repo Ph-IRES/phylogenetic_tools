@@ -327,35 +327,44 @@ alignFastaFile <-
 fasta2tree <-
   function(
     .data_fasta,
+    model_ml = NULL, # new argument: if evolutionary model is provided, skip model test
+    # model_opt = NULL, # new argument: if opt evolutionary model is provided, skip model opt
     my_outgroup = "HQ909472_Kraemaria_bryani_isolate_C258_outgroup Kraemeria bryani isolate C258 voucher LACM:T-000093 cytochrome oxidase subunit I (CO1) gene, partial cds; mitochondrial",
     n_bootstraps = 100,
     threshold_bootstraps = 50,
     n_cpu = parallel::detectCores()
   ){
     
-    #### ML Model Selection ####
-    ## test models, select lowest AIC
-    data_modeltest <-
-      .data_fasta %>%
-      phangorn::modelTest(
-        model = "all",
-        multicore = TRUE,
-        mc.cores = n_cpu - 1
-      )
-    
-    #### Initial ModelFit ####
-    ## initial fit, use best fit model from prev chunk
-    data_modeltest_fit <-
-      as.pml(data_modeltest)
-    # data_modeltest_fit
-    
-    # automatically read output from previous line and return model in next line
-    modeltest_as.pml_bestfit <- 
-      data_modeltest_fit$call$tree %>% 
-      as.character() %>% 
-      gsub("tree_", "", .)
-    
-    print(modeltest_as.pml_bestfit)
+    #### ML Model Selection & Optimization ####
+    if(is.null(model_ml)) {
+      ## test models, select lowest AIC
+      data_modeltest <-
+        .data_fasta %>%
+        phangorn::modelTest(
+          model = "all",
+          multicore = TRUE,
+          mc.cores = n_cpu - 1
+        )
+      
+      #### Initial ModelFit ####
+      ## initial fit, use best fit model from prev chunk
+      data_modeltest_fit <-
+        as.pml(data_modeltest)
+      # data_modeltest_fit
+      
+      # automatically read output from previous line and return model in next line
+      modeltest_as.pml_bestfit <- 
+        data_modeltest_fit$call$tree %>% 
+        as.character() %>% 
+        gsub("tree_", "", .)
+      
+      print(paste("The best evolutionary model is:", modeltest_as.pml_bestfit))
+      
+    } else {
+      
+      data_modeltest_fit = model_ml
+      
+    }
     
     #### Optimize Fit ####
     
@@ -363,30 +372,53 @@ fasta2tree <-
     # ?optim.pml gives guidance on how to set optBf and optQ
     # optInv and optGamma should be set depending on whether your model includes +I and/or +G parameters
     
+    # Extract the base model by removing +I and +G
+    base_model <- 
+      gsub("\\+I|\\+G", "", modeltest_as.pml_bestfit) %>%
+      trimws()
+    
+    # Automatically set optBf and optQ based on the base model
+    if(base_model == "JC") {
+      auto_optBf <- FALSE
+      auto_optQ <- FALSE
+    } else if(base_model == "K80") {
+      auto_optBf <- FALSE
+      auto_optQ <- TRUE
+    } else if(base_model == "F81") {
+      auto_optBf <- TRUE
+      auto_optQ <- FALSE
+    } else if(base_model == "SYM") {
+      auto_optBf <- FALSE
+      auto_optQ <- TRUE
+    } else {
+      # default to optimizing both if the model is not one of the above
+      auto_optBf <- TRUE
+      auto_optQ <- TRUE
+    }
+    
+    # Determine if the best model includes +I or +G parameters
+    auto_optInv <- grepl("\\+I", modeltest_as.pml_bestfit)
+    auto_optGamma <- grepl("\\+G", modeltest_as.pml_bestfit)
+    
+    # print(
+    cat("Optimized evolutionary model parameters:\n",
+        "optBf =", auto_optBf, "\n",
+        "optQ =", auto_optQ, "\n",
+        "optInv =", auto_optInv, "\n",
+        "optGamma =", auto_optGamma, "\n")
+    # )
+    
     evolModelFit_opt <-
       data_modeltest_fit %>%
       optim.pml(
-        optBf = TRUE,
-        optQ = TRUE,
-        optInv = TRUE,
-        optGamma = FALSE,
+        optBf = auto_optBf,
+        optQ = auto_optQ,
+        optInv = auto_optInv,
+        optGamma = auto_optGamma,
         rearrangement = "NNI",
         control = pml.control(trace = 0)
       )
     evolModelFit_opt
-    
-    # Dave, is this doing what we want?
-    # automatically read output from previous line and return model in next line
-    modeltest_optim.pml_bestfit <- 
-      evolModelFit_opt %>% 
-      capture.output() %>%
-      .[1] %>%
-      gsub(pattern = "model:\\s",
-           replacement = "") %>%
-      gsub(pattern = "\\s",
-           replacement = "")
-    
-    modeltest_optim.pml_bestfit
     
     #### and Bootstrap ####
     # bootstrap model
@@ -394,9 +426,9 @@ fasta2tree <-
       bootstrap.pml(
         evolModelFit_opt,
         bs = n_bootstraps,
-        optNni = TRUE #,
-        #multicore = TRUE,
-        #mc.cores = n_cpu - 1
+        optNni = TRUE ,
+        multicore = TRUE,
+        mc.cores = n_cpu - 1
       )
     
     ## plotBS functions
@@ -415,9 +447,19 @@ fasta2tree <-
         method = "FBP"
       )
     
+    # if max bs val is less than or equal to 1, then convert to scale of 0-100
+    conversion_factor <- 
+      if (
+        max(
+          as.numeric(
+            tree_evolModelFit_opt_bs$node.label
+          ), 
+          na.rm = TRUE) <= 1
+      ) 100 else 1
+    
     # Convert bootstrap support values to values between 0 and 100
-    tree_evolModelFit_opt_bs$node.label <- 
-      (as.numeric(tree_evolModelFit_opt_bs$node.label) * 100) %>% 
+    bootstraps_sig <- 
+      (as.numeric(tree_evolModelFit_opt_bs$node.label) * conversion_factor) %>% 
       { ifelse(. < threshold_bootstraps, "", .) } %>%
       { ifelse(is.na(.), "", .) }
     
@@ -434,6 +476,12 @@ fasta2tree <-
                              my_outgroup))) %>%
       pull()
     
+    print(
+      paste(
+        "The outgroup is: ", the_outgroup
+      )
+    )
+    
     if(length(the_outgroup) > 0) {
       tree_evolModelFit_opt_bs_outgroup <-
         unroot(tree_evolModelFit_opt_bs) %>%
@@ -441,16 +489,26 @@ fasta2tree <-
       
       tree_evolModelFit_opt_bs_outgroup
       
-      # plot(
-      #   tree_evolModelFit_opt_bs_outgroup,
-      #   main = modeltest_optim.pml_bestfit
-      # )
       cat("Outgroup found in the tree. Returning the rerooted tree.\n")
-      return(tree_evolModelFit_opt_bs_outgroup)
+      return(
+        list(
+          tree = tree_evolModelFit_opt_bs_outgroup, 
+          model_ml = data_modeltest_fit,
+          bootstraps_sig,
+          best_model = modeltest_as.pml_bestfit
+        )
+      )
     } else {
       # If the_outgroup is empty, return the original tree without re-rooting
       cat("Outgroup not found in the tree. Returning the original tree.\n")
-      return(tree_evolModelFit_opt_bs)
+      return(
+        list(
+          tree = tree_evolModelFit_opt_bs, 
+          model_ml = data_modeltest_fit,
+          bootstraps_sig = bootstraps_sig,
+          best_model = modeltest_as.pml_bestfit
+        )
+      )    
     }
   }
 
