@@ -26,7 +26,7 @@ Clone this repo to the same directory within which your project repo resides (no
    	* you can vary the number of records returned to increase or decrease the breadth of taxa in your phylogeny
 	* on the blast output webpage, select `MSA Viewer` and download the aligned sequences in a fasta
 	  ![](markdown_images/blast_msa.png)
-        * on the blast output webpage, select `Distance tree of results` to idendentify the monophyletic clade of ingroups and outgroup for your desired tree
+        * on the blast output webpage, select `Distance tree of results` to identify the monophyletic clade of ingroups and outgroup for your desired tree
           ![](markdown_images/blast_tree.png)
           In this tree, the clade with your query seq is highlighted yellow.  If we want all damselflies, then _Melantrhips fuscus_ is the best outgroup and the ingroup is all dragonflies and damselflies (as an example).
         * Explore the `Taxonomy` tab in your blast results page and cross reference against the tree to confirm the monophyletic clade and outgroup for your desired tree.
