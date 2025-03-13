@@ -494,7 +494,7 @@ fasta2tree <-
         list(
           tree = tree_evolModelFit_opt_bs_outgroup, 
           model_ml = data_modeltest_fit,
-          bootstraps_sig,
+          bootstraps_sig = bootstraps_sig,
           best_model = modeltest_as.pml_bestfit
         )
       )
