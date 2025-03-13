@@ -1,11 +1,11 @@
-#!/usr/env Rscript
+#!/usr/bin/env Rscript
 
 #### PACKAGES ####
 
 cran_packages <- c(
   "tidyverse", "BiocManager", "janitor", "phangorn", "styler", "ape",
   "tinytex", "igraph", "ips", "seqinr", "ggtext", "bios2mds", "rgl",
-  "RCurl", "devtools", "ggrepel", "haplotypes", "tidytree"
+  "RCurl", "devtools", "ggrepel", "haplotypes", "tidytree", "ggimage"
 )
 
 special_packages <- list(
@@ -14,13 +14,15 @@ special_packages <- list(
   list(pkg = "microRNA",      source = "Bioc",   repo = "microRNA",                 install_options = list()),
   list(pkg = "ggtree",        source = "Bioc",   repo = "ggtree",                   install_options = list()),
   list(pkg = "msa",           source = "Bioc",   repo = "msa",                      install_options = list()),
-  list(pkg = "ggimage",       source = "Bioc",   repo = "ggimage",                  install_options = list(type = "binary")),
+  list(pkg = "ggimage",       source = "GitHub", repo = "GuangchuangYu/ggimage",    install_options = list()),
   list(pkg = "R4RNA",         source = "Bioc",   repo = "R4RNA",                    install_options = list()),
-  list(pkg = "ggmsa",         source = "GitHub", repo = "YuLab-SMU/ggmsa",           install_options = list(type = "binary")),
-  list(pkg = "treedataverse", source = "Bioc",   repo = "YuLab-SMU/treedataverse",   install_options = list(type = "binary", force = TRUE)),
+  list(pkg = "ggmsa",         source = "GitHub", repo = "YuLab-SMU/ggmsa",           install_options = list()),
+  list(pkg = "treedataverse", source = "Bioc",   repo = "YuLab-SMU/treedataverse",   install_options = list()),
   list(pkg = "usedist",       source = "GitHub", repo = "kylebittinger/usedist",     install_options = list()),
   list(pkg = "rMSA",          source = "GitHub", repo = "mhahsler/rMSA",              install_options = list())
 )
+
+setRepositories(ind=1:2)
 
 # A helper function that:
 # 1. Attempts to load a package (quietly, without startup messages).
@@ -28,35 +30,36 @@ special_packages <- list(
 #    specified source (CRAN, Bioc, or GitHub) and installation options.
 # 3. Finally, it attempts to load the package again, printing a clear message
 #    if the package still fails to load.
-load_install_pkg <- function(pkg, source = "CRAN", repo = NULL, install_options = list()) {
-  if (!suppressPackageStartupMessages(require(pkg, character.only = TRUE))) {
-    message("Package '", pkg, "' not found. Attempting installation from ", source, " ...")
-    tryCatch({
-      if (source == "CRAN") {
-        install.packages(pkg, Ncpus = parallel::detectCores() - 1)
-      } else if (source == "Bioc") {
-        do.call(BiocManager::install, c(list(pkg), install_options))
-      } else if (source == "GitHub") {
-        if (is.null(repo)) {
-          stop("For GitHub installation, 'repo' must be specified for package '", pkg, "'.")
-        }
-        do.call(devtools::install_github, c(list(repo), install_options))
-      } else {
-        stop("Unknown installation source '", source, "' for package '", pkg, "'.")
-      }
-    }, error = function(e) {
-      message("Installation of package '", pkg, "' failed: ", e$message)
-    })
-    
+load_install_pkg <- 
+  function(pkg, source = "CRAN", repo = NULL, install_options = list()) {
     if (!suppressPackageStartupMessages(require(pkg, character.only = TRUE))) {
-      message("Failed to load package '", pkg, "' even after installation. Please check the installation or try again later.")
+      message("Package '", pkg, "' not found. Attempting installation from ", source, " ...")
+      tryCatch({
+        if (source == "CRAN") {
+          install.packages(pkg, Ncpus = parallel::detectCores() - 1)
+        } else if (source == "Bioc") {
+          do.call(BiocManager::install, c(list(pkg), install_options))
+        } else if (source == "GitHub") {
+          if (is.null(repo)) {
+            stop("For GitHub installation, 'repo' must be specified for package '", pkg, "'.")
+          }
+          do.call(devtools::install_github, c(list(repo), install_options))
+        } else {
+          stop("Unknown installation source '", source, "' for package '", pkg, "'.")
+        }
+      }, error = function(e) {
+        message("Installation of package '", pkg, "' failed: ", e$message)
+      })
+      
+      if (!suppressPackageStartupMessages(require(pkg, character.only = TRUE))) {
+        message("Failed to load package '", pkg, "' even after installation. Please check the installation or try again later.")
+      } else {
+        message("Successfully loaded package '", pkg, "'.")
+      }
     } else {
-      message("Successfully loaded package '", pkg, "'.")
+      message("Package '", pkg, "' loaded successfully.")
     }
-  } else {
-    message("Package '", pkg, "' loaded successfully.")
   }
-}
 
 # Loop through and process each CRAN package.
 for (pkg in cran_packages) {
