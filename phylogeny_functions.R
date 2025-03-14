@@ -331,7 +331,6 @@ fasta2tree <-
   function(
     .data_fasta,
     model_ml = NULL, # new argument: if evolutionary model is provided, skip model test
-    # model_opt = NULL, # new argument: if opt evolutionary model is provided, skip model opt
     my_outgroup = "HQ909472_Kraemaria_bryani_isolate_C258_outgroup Kraemeria bryani isolate C258 voucher LACM:T-000093 cytochrome oxidase subunit I (CO1) gene, partial cds; mitochondrial",
     n_bootstraps = 100,
     threshold_bootstraps = 50,
