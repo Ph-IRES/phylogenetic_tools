@@ -106,15 +106,21 @@ tree <-
 
 # save tree as RDS so it could be read in and edited, can read it in with readRDS()
 saveRDS(
-  tree, 
+  tree_opt_bs,
   file = "../output/sanger_curated_ab1_ischnura_luta_H3/tree_ischnura_luta_filtered_619.rds"
 )
 
-saveNewickTree(tree, 
-               "../output/sanger_curated_ab1_ischnura_luta_H3/tree_ischnura_luta_filtered_619.nwk")
+saveNewickTree(
+    tree_opt_bs$tree %>% 
+    { 
+      .$node.label <- tree_opt_bs$bootstraps_sig
+      .
+    } ,  
+  "../output/sanger_curated_ab1_ischnura_luta_H3/tree_ischnura_luta_filtered_619.nwk"
+)
 
 #### PLOT TREE ####
-tree %>%
+tree_opt_bs$tree %>%
   plotGgTree(
     threshold_bootstraps = 50,
     tip_color = "red", 
