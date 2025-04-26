@@ -494,10 +494,11 @@ fasta2tree <-
       cat("Outgroup found in the tree. Returning the rerooted tree.\n")
       return(
         list(
-          tree = tree_evolModelFit_opt_bs_outgroup, 
           model_ml = data_modeltest_fit,
-          bootstraps_sig = bootstraps_sig,
-          best_model = modeltest_as.pml_bestfit
+          best_model = modeltest_as.pml_bestfit,
+          model_optim.pml = evolModelFit_opt,
+          tree = tree_evolModelFit_opt_bs_outgroup, 
+          bootstraps_sig = bootstraps_sig
         )
       )
     } else {
@@ -505,10 +506,11 @@ fasta2tree <-
       cat("Outgroup not found in the tree. Returning the original tree.\n")
       return(
         list(
-          tree = tree_evolModelFit_opt_bs, 
           model_ml = data_modeltest_fit,
-          bootstraps_sig = bootstraps_sig,
-          best_model = modeltest_as.pml_bestfit
+          best_model = modeltest_as.pml_bestfit,
+          model_optim.pml = evolModelFit_opt,
+          tree = tree_evolModelFit_opt_bs, 
+          bootstraps_sig = bootstraps_sig
         )
       )    
     }
