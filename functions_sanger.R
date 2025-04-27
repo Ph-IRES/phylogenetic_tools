@@ -56,6 +56,8 @@ for (pkg in cran_pkgs) {
   }
 }
 
+rm(pkg_info, special_packages, bioc_pkgs, cran_packages, cran_pkgs, pkg)
+
 # if(!require("BiocManager", quietly = TRUE)){
 #   install.packages("BiocManager")
 # }

@@ -74,119 +74,10 @@ for (pkg_info in special_packages) {
                    install_options = pkg_info$install_options)
 }
 
+rm(pkg_info, special_packages, bioc_pkgs, cran_packages, cran_pkgs, pkg)
 
 
-
-
-# if (!require("Biostrings")) {
-#   BiocManager::install("Biostrings")
-# }
-# 
-# if (!require("seqLogo")) {
-#   BiocManager::install("seqLogo")
-# }
-# 
-# if (!require("microRNA")) {
-#   BiocManager::install("microRNA")
-# }
-# 
-# if (!require("ggtree")) {
-#   BiocManager::install("ggtree")
-# }
-# 
-# if (!require("msa")) {
-#   BiocManager::install("msa")
-# }
-# 
-# if (!require("ggimage")) {
-#   BiocManager::install(
-#     "ggimage",
-#     type = "binary"
-#   )
-# }
-# 
-# if (!require("R4RNA")) {
-#   BiocManager::install("R4RNA")
-# }
-# 
-# if (!require("YuLab-SMU/ggmsa")) {
-#   devtools::install_github(
-#     "YuLab-SMU/ggmsa",
-#     type = "binary"
-#   )
-# }
-# 
-# if (!require("treedataverse")) {
-#   BiocManager::install(
-#     "YuLab-SMU/treedataverse",
-#     type = "binary",
-#     force = TRUE
-#   )
-# }
-# 
-# if (!require("usedist")) {
-#   devtools::install_github("kylebittinger/usedist")
-# }
-# 
-# if (!require("rMSA")) {
-#   devtools::install_github("mhahsler/rMSA")
-# }
-# 
-# packages_used <-
-#   c(
-#     "tidyverse",
-#     "BiocManager",
-#     "janitor",
-#     "phangorn",
-#     "styler",
-#     "ape",
-#     "msa",
-#     "tinytex",
-#     "igraph",
-#     "ips",
-#     "seqinr",
-#     "ggtext",
-#     "bios2mds",
-#     "rgl",
-#     "RCurl",
-#     "devtools",
-#     "ggrepel",
-#     "haplotypes",
-#     "tidytree",
-#     "Biostrings",
-#     "seqLogo",
-#     "microRNA",
-#     "ggtree",
-#     "ggimage",
-#     "ggmsa",
-#     "treedataverse",
-#     "usedist",
-#     "rMSA"
-#   )
-# 
-# packages_to_install <-
-#   packages_used[!packages_used %in% installed.packages()[, 1]]
-# 
-# if (length(packages_to_install) > 0) {
-#   install.packages(packages_to_install,
-#                    Ncpus = parallel::detectCores() - 1
-#   )
-# }
-# 
-# lapply(packages_used,
-#        require,
-#        character.only = TRUE
-# )
-# ## load required library
-# library(Biostrings)
-# library(microRNA)
-# library(ggtree)
-# library(ggimage)
-# library(ggmsa)
-# library(ggrepel)
-
-
-#### Concatonate Fasta Files ####
+#### Concatenate Fasta Files ####
 
 # my_seqs_fasta_file = "../data/sequences/eviota_CO1_aligned_trimmed.fasta"
 # ncbi_fasta_file = "../output/eviota_coi_ncbi.fasta"
@@ -497,6 +388,7 @@ fasta2tree <-
           model_ml = data_modeltest_fit,
           best_model = modeltest_as.pml_bestfit,
           model_optim.pml = evolModelFit_opt,
+          # bs_trees = trees_evolModelFit_opt_bs,
           tree = tree_evolModelFit_opt_bs_outgroup, 
           bootstraps_sig = bootstraps_sig
         )
@@ -509,6 +401,7 @@ fasta2tree <-
           model_ml = data_modeltest_fit,
           best_model = modeltest_as.pml_bestfit,
           model_optim.pml = evolModelFit_opt,
+          # bs_trees = trees_evolModelFit_opt_bs,
           tree = tree_evolModelFit_opt_bs, 
           bootstraps_sig = bootstraps_sig
         )
