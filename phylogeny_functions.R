@@ -225,7 +225,7 @@ fasta2tree <-
     my_outgroup = "HQ909472_Kraemaria_bryani_isolate_C258_outgroup Kraemeria bryani isolate C258 voucher LACM:T-000093 cytochrome oxidase subunit I (CO1) gene, partial cds; mitochondrial",
     n_bootstraps = 100,
     threshold_bootstraps = 50,
-    n_cpu = parallel::detectCores()
+    n_cpu = parallel::detectCores() - 1
   ){
     
     #### ML Model Selection & Optimization ####
@@ -255,7 +255,28 @@ fasta2tree <-
       
     } else {
       
-      data_modeltest_fit = model_ml
+      data_modeltest <-
+        .data_fasta %>%
+        phangorn::modelTest(
+          model = model_ml,
+          multicore = TRUE,
+          mc.cores = n_cpu - 1
+        )
+      
+      #### Initial ModelFit ####
+      ## initial fit, use best fit model from prev chunk
+      data_modeltest_fit <-
+        as.pml(data_modeltest)
+      # data_modeltest_fit
+      
+      # automatically read output from previous line and return model in next line
+      modeltest_as.pml_bestfit <- 
+        data_modeltest_fit$call$tree %>% 
+        as.character() %>% 
+        gsub("tree_", "", .)
+      
+      print(paste("The best version of the ", model_ml, 
+                  " evolutionary model is:", modeltest_as.pml_bestfit))
       
     }
     
@@ -321,7 +342,7 @@ fasta2tree <-
         bs = n_bootstraps,
         optNni = TRUE ,
         multicore = TRUE,
-        mc.cores = n_cpu - 1
+        mc.cores = n_cpu
       )
     
     ## plotBS functions
@@ -359,21 +380,25 @@ fasta2tree <-
     #### SPECIFY OUTGROUP & ROOT ####
     # this takes the accession number and makes sure that the name of the outgroup matches naming used in tip labels
     
-    
-    the_outgroup <-
-      tree_evolModelFit_opt_bs$tip.label %>%
-      as_tibble() %>%
-      filter(str_detect(value,
-                        gsub("[_\\s].*",
-                             "",
-                             my_outgroup))) %>%
-      pull()
-    
-    print(
-      paste(
-        "The outgroup is: ", the_outgroup
+    if(!is.null(my_outgroup)){
+      the_outgroup <-
+        tree_evolModelFit_opt_bs$tip.label %>%
+        as_tibble() %>%
+        filter(str_detect(value,
+                          gsub("[_\\s].*",
+                               "",
+                               my_outgroup))) %>%
+        pull()
+      
+      print(
+        paste(
+          "The outgroup is: ", the_outgroup
+        )
       )
-    )
+    } else {
+      the_outgroup <- character()
+    }
+    
     
     if(length(the_outgroup) > 0) {
       tree_evolModelFit_opt_bs_outgroup <-
@@ -388,7 +413,6 @@ fasta2tree <-
           model_ml = data_modeltest_fit,
           best_model = modeltest_as.pml_bestfit,
           model_optim.pml = evolModelFit_opt,
-          # bs_trees = trees_evolModelFit_opt_bs,
           tree = tree_evolModelFit_opt_bs_outgroup, 
           bootstraps_sig = bootstraps_sig
         )
@@ -401,7 +425,6 @@ fasta2tree <-
           model_ml = data_modeltest_fit,
           best_model = modeltest_as.pml_bestfit,
           model_optim.pml = evolModelFit_opt,
-          # bs_trees = trees_evolModelFit_opt_bs,
           tree = tree_evolModelFit_opt_bs, 
           bootstraps_sig = bootstraps_sig
         )
