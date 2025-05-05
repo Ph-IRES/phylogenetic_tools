@@ -225,7 +225,7 @@ fasta2tree <-
     my_outgroup = "HQ909472_Kraemaria_bryani_isolate_C258_outgroup Kraemeria bryani isolate C258 voucher LACM:T-000093 cytochrome oxidase subunit I (CO1) gene, partial cds; mitochondrial",
     n_bootstraps = 100,
     threshold_bootstraps = 50,
-    n_cpu = parallel::detectCores() - 1
+    n_cpu = parallel::detectCores()
   ){
     
     #### ML Model Selection & Optimization ####
