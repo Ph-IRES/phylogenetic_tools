@@ -236,7 +236,7 @@ fasta2tree <-
         phangorn::modelTest(
           model = "all",
           multicore = TRUE,
-          mc.cores = n_cpu - 1
+          mc.cores = ifelse(n_cpu - 1 == 1, FALSE, n_cpu - 1)
         )
       
       #### Initial ModelFit ####
@@ -260,7 +260,7 @@ fasta2tree <-
         phangorn::modelTest(
           model = model_ml,
           multicore = TRUE,
-          mc.cores = n_cpu - 1
+          mc.cores = ifelse(n_cpu - 1 == 1, FALSE, n_cpu - 1)
         )
       
       #### Initial ModelFit ####
@@ -341,8 +341,8 @@ fasta2tree <-
         evolModelFit_opt,
         bs = n_bootstraps,
         optNni = TRUE ,
-        multicore = TRUE,
-        mc.cores = n_cpu
+        multicore = ifelse(n_cpu == 1, FALSE, TRUE),
+        mc.cores = ifelse(n_cpu == 1, FALSE, n_cpu)
       )
     
     ## plotBS functions
