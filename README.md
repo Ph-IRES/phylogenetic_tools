@@ -68,3 +68,35 @@ Clone this repo to the same directory within which your project repo resides (no
 
 13. Use `figtree` to beautify the tree
 
+---
+
+## Instructions for Making a Multilocus Tree from Partitioned Multilocus DataSet
+
+1. Blast target species x locus sequence(s) and return 5000 results on website for each
+	* view with msa viewer in blast results page and download fasta (`*.aln`)
+
+2. Wrangle the `aln` fasta files from NCBI BLAST MSA with `aln2tsv()` function utilized in `prj_rotablue_barcoding\scripts/wrangle_blast_results_multilocus.R`
+
+	* I converted the awk script to an R script `aln2tsv*.R`.  
+		* now after downloading `*.aln` from NCBI MSA, they are read directly into R without any bash or awk scripts
+		* the `aln2tsv()` function is called in `wrangle_blast_results_multilocus.R`
+		* I copied it to `phylogenetic_tools/multilocus_phylogeny_functions.R`
+	* In `prj_rotablue_barcoding\scripts` I call this function in `wrangle_blast_results_multilocus.R`
+	* Output files were saved to `output/multilocus_phylogeny/DirForParticularSetofLoci`
+		* e.g. `28s_h3`, `16s_coi`, etc...
+
+3. Wrangle the consensus fasta files from our sanger sequencing in R with `wrangle_sanger_seqs_multilocus.R`
+
+	* these sequences are your sanger sequences that have been manually curated and then processed with `processCuratedSANGER()`
+	
+	* I copied these files into `multilocus_phylogeny`
+	* Output files were saved to `output/multilocus_phylogeny/DirForParticularSetofLoci`
+		* e.g. `28s_h3`, `16s_coi`, etc...
+	
+4. Wrangle multilocus curated data using `ischnura_luta_16s-coi-28s-h3_partitioned_tree.R`
+	
+	* first concatenate blast and sanger files, align, then make tree for each locus
+	* make multilocus phylogeny from unpartitioned data (just concatenated)
+	* make multilocus phylogeny from partitioned data set
+		* bootstrap the multilocus tree using `bootstrap.pmlPart()` written by CEB and stored in `phylogenetic_tools/multilocus_phylogeny_functions.R`
+

@@ -97,6 +97,8 @@ rm(special_packages, cran_packages, pkg, pkg_info)
 
 source("df2fasta.R")
 source("fasta2df.R")
+source("../../phylogenetic_tools/multilocus_phylogeny_fuctions.R") # moved df2fasta() and fasta2df to phylogenetic tools
+
 
 #### WRANGLE SANGER SEQS 16S, COI, 28S, H3####
 

@@ -317,3 +317,183 @@ fasta2df <- function(file_path) {
   )
 }
 
+
+# bootstrap.pmlPart <- 
+#   function(
+    #     x, 
+#     bs = 100,
+#     trees = TRUE,
+#     multicore = FALSE, 
+#     mc.cores = NULL,
+#     optNni = FALSE, 
+#     ...
+#   ) {
+#     
+#     if (.Platform$OS.type == "windows") multicore <- FALSE
+#     if (multicore && is.null(mc.cores))
+#       mc.cores <- max(1L, parallel::detectCores() - 1L)
+#     if(multicore && mc.cores < 2L) multicore <- FALSE
+#     
+#     extras <- match.call(expand.dots = FALSE)$...
+#     
+#     # pre-extract data/weight for speed
+#     weight_list <- lapply(x$fits, function(f) attr(f$data, "weight"))
+#     v_list      <- lapply(weight_list, function(w) rep(seq_along(w), w))
+#     
+#     oneRep <- function(seed = NULL, ...) {
+#       if (!is.null(seed)) set.seed(seed)
+#       
+#       # resample weights locus-wise
+#       bs_fits <- 
+#         Map(
+#           function(fit, v, w) {
+#             # ...
+#             w_new <- tabulate(sample(v, replace = TRUE), length(w))
+#             ind   <- which(w_new > 0)
+#             dat   <- phangorn:::getRows(fit$data, ind)
+#             dat
+#             attr(dat, "weight") <- w_new[ind]
+#             fit_boot <- update(fit, data = dat)
+#             
+#             ## re-estimate model parameters and (optionally) do NNI
+#             optim.pml(
+#               fit_boot,
+#               optEdge  = TRUE,
+#               optBf    = TRUE,
+#               optQ     = TRUE,
+#               optInv   = TRUE,
+#               optGamma = TRUE,
+#               optRate  = TRUE,
+#               optNni   = FALSE,
+#               # append(list(object = fit_boot),
+#               #        extras)
+#             )
+#           }, 
+#           x$fits, v_list, weight_list
+#         )
+#       
+#       # rebuild pmlPart and, if requested, do quick optimisation
+#       sp_rep <- 
+#         pmlPart(
+#           formula = as.formula(x$call$formula),
+#           object  = bs_fits
+#           # control = x$call$control
+#           # method  = x$call$method
+#           # method  = "unrooted"
+#           # ...
+#         )
+#       if (optNni)
+#         sp_rep <- pmlPart(~ nni + edge, sp_rep, control = pml.control(maxit = 2))
+#       
+#       if (trees) sp_rep$fits[[1]]$tree else sp_rep
+#     }
+#     
+#     res <- if (multicore)
+#       parallel::mclapply(seq_len(bs), oneRep, mc.cores = mc.cores)
+#     else lapply(seq_len(bs), oneRep)
+#     
+#     if (trees) class(res) <- "multiPhylo"
+#     res
+#   }
+# 
+
+bootstrap.pmlPart <- function(
+    x,                       # a pmlPart object *or* list of pml fits
+    bs        = 100,
+    trees     = TRUE,
+    multicore = FALSE,
+    mc.cores  = NULL,
+    seed      = NULL,        # optional master seed
+    ...
+) {
+  ## ---------- 0. sanity ---------------------------------------------------
+  if (!inherits(x, "pmlPart") && !is.list(x))
+    stop("`x` must be a pmlPart object or a list of pml fits")
+  
+  ## replicate the OS-specific safeguard used in bootstrap.pml()
+  if (.Platform$OS.type == "windows") multicore <- FALSE
+  if (multicore && is.null(mc.cores))
+    mc.cores <- max(1L, parallel::detectCores() - 1L)
+  if (multicore && mc.cores < 2L) multicore <- FALSE
+  
+  ## capture all extra optim.* switches exactly the way bootstrap.pml() does
+  extras  <- match.call(expand.dots = FALSE)$...
+  
+  ## CEB I'm skeptical about these next 2 lines
+  # optNni  <- isTRUE(extras$optNni)     # convenience flag for quick NNI later
+  # extras$optNni <- NULL                # we control per-locus NNI below
+  
+  ## make sure we have a list of per-locus fits and remember the formula/method
+  if (inherits(x, "pmlPart")) {
+    fits         <- x$fits
+    part_formula <- if (inherits(x$call$formula, "formula"))
+      x$call$formula else as.formula(x$call$formula)
+    # CEB I question whether this is the best way to decipher among tree types.  is.ultrametric, is.rooted()
+    method_used  <- x$call$method %||% "unrooted"
+    ctrl_used    <- x$call$control %||% pml.control(trace = 0)
+  } else {                       # plain list supplied
+    fits         <- x
+    part_formula <- ~ edge + rate          # sensible default
+    method_used  <- "unrooted"
+    ctrl_used    <- pml.control(trace = 0)
+  }
+  
+  ## pre-extract pattern-weight helpers for each locus (saves time)
+  weight_list <- lapply(fits, function(f) attr(f$data, "weight"))
+  v_list      <- lapply(weight_list, function(w) rep(seq_along(w), w))
+  
+  ## ---------- 1. one replicate -------------------------------------------
+  oneRep <- function(rep_id) {
+    if (!is.null(seed)) set.seed(seed + rep_id)
+    
+    ## 1a. locus-wise bootstrap of pattern weights + re-optimisation
+    bs_fits <- Map(function(fit, v, w) {
+      w_new <- tabulate(sample(v, replace = TRUE), length(w))
+      w_new
+      ind   <- which(w_new > 0)
+      dat   <- phangorn:::getRows(fit$data, ind)
+      attr(dat, "weight") <- w_new[ind]
+      
+      fit_boot <- update(fit, data = dat)
+      
+      ## re-estimate continuous parameters & optional per-locus NNI
+      do.call(
+        optim.pml,
+        append(
+          list(object = fit_boot),
+          extras                     # <-- forward everything from ...
+        )
+      )
+    },
+    fits, v_list, weight_list)
+    
+    ## 1b. rebuild pmlPart for the replicate (without global NNI yet)
+    sp_rep <- pmlPart(
+      formula = part_formula,
+      object  = bs_fits,
+      control = ctrl_used,
+      method  = method_used
+    )
+    
+    ## CEB I'm skeptical about this line
+    ## 1c. optional quick NNI search on the *shared* tree
+    # if (isTRUE(optNni))
+    #   sp_rep <- pmlPart(~ nni + edge, sp_rep,
+    #                     control = pml.control(maxit = 2, trace = 0))
+    
+    if (trees) sp_rep$fits[[1]]$tree else sp_rep
+  }
+  
+  ## ---------- 2. replicate bs times (optionally in parallel) --------------
+  res <- if (multicore)
+    parallel::mclapply(seq_len(bs), oneRep, mc.cores = mc.cores)
+  else
+    lapply(seq_len(bs), oneRep)
+  
+  if (trees) {
+    class(res) <- "multiPhylo"
+    res <- .compressTipLabel(res)  # save memory (same as original)
+  }
+  res
+}
+
