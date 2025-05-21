@@ -288,7 +288,7 @@ fasta2tree <-
     
     # Extract the base model by removing +I and +G
     base_model <- 
-      gsub("\\+I|\\+G", "", modeltest_as.pml_bestfit) %>%
+      gsub("\\+I|\\+G.*", "", modeltest_as.pml_bestfit) %>%
       trimws()
     
     # Automatically set optBf and optQ based on the base model
