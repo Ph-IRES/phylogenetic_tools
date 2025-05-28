@@ -102,7 +102,7 @@ source("../../phylogenetic_tools/multilocus_phylogeny_fuctions.R") # moved aln2t
 
 source("df2fasta.R")
 
-wrangled_tsv <- 
+wrangled_aln <- 
   list.files(
     path       = "../output/multilocus_phylogeny/",
     pattern    = "\\.aln$",
@@ -236,7 +236,7 @@ wrangled_tsv <-
 # duplicated accessions indicate that the sequences belong to a genome accession
 
 accession_dupes <- 
-  wrangled_tsv %>%                     # <- replace with your object
+  wrangled_aln %>%                     # <- replace with your object
   group_by(accession) %>%                  # group by the column of interest
   filter(n() > 1) %>%                      # keep groups with >1 row
   ungroup() %>%                                # optional: drop the grouping
@@ -252,17 +252,23 @@ accession_dupes %>%
 
 #### GET DUPLICATED SPECIMEN VOUCHERS ####
 
-# accession_specvouch <-
-#   wrangled_tsv %>%                     # <- replace with your object
-#   group_by(specimen_voucher) %>%                  # group by the column of interest
-#   filter(n() > 1) %>%                      # keep groups with >1 row
-#   ungroup() %>%                                # optional: drop the grouping
-#   arrange(organism, isolate, specimen_voucher)
+accession_specvouch <-
+  wrangled_aln %>%                     # <- replace with your object
+  filter(!is.na(specimen_voucher)) %>%
+  group_by(specimen_voucher) %>%                  # group by the column of interest
+  filter(n() > 1) %>%                      # keep groups with >1 row
+  ungroup() %>%                                # optional: drop the grouping
+  arrange(organism, isolate, specimen_voucher) %>%    # keep rows with a voucher
+  group_by(specimen_voucher, locus) %>%
+  filter(n() == 1) %>%
+  group_by(specimen_voucher) %>%                  # group by the column of interest
+  filter(n() > 1)
 
 #### GET DUPLICATED ISOLATES ####
 
 isolate_dups <-
-  wrangled_tsv %>%                     # <- replace with your object
+  wrangled_aln %>%                     # <- replace with your object
+  filter(!is.na(isolate)) %>%
   group_by(isolate) %>%                  # group by the column of interest
   filter(n() > 1) %>%                      # keep groups with >1 row
   ungroup() %>%                                # optional: drop the grouping
