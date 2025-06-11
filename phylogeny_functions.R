@@ -336,14 +336,26 @@ fasta2tree <-
     
     #### and Bootstrap ####
     # bootstrap model
-    trees_evolModelFit_opt_bs <-
-      bootstrap.pml(
-        evolModelFit_opt,
-        bs = n_bootstraps,
-        optNni = TRUE ,
-        multicore = ifelse(n_cpu - 1 == 1, FALSE, TRUE),
-        mc.cores = ifelse(n_cpu - 1 == 1, NULL, n_cpu - 1)
-      )
+    # Skip NNi if less than 5 tips on tree since that can lead to issues if there are branches with 0 length that are collapsed down to 3 or fewer branches.
+    if(length(evolModelFit_opt$data) < 5){
+      trees_evolModelFit_opt_bs <-
+        bootstrap.pml(
+          evolModelFit_opt,
+          bs = n_bootstraps,
+          optNni =  FALSE,
+          multicore = ifelse(n_cpu - 1 == 1, FALSE, TRUE),
+          mc.cores = ifelse(n_cpu - 1 == 1, NULL, n_cpu - 1),
+        )
+    } else {
+      trees_evolModelFit_opt_bs <-
+        bootstrap.pml(
+          evolModelFit_opt,
+          bs = n_bootstraps,
+          optNni =  TRUE,
+          multicore = ifelse(n_cpu - 1 == 1, FALSE, TRUE),
+          mc.cores = ifelse(n_cpu - 1 == 1, NULL, n_cpu - 1),
+        )
+    }
     
     ## plotBS functions
     # type = the type of tree to plot, one of "phylogram", "cladogram", "fan", "unrooted", "radial" or "none". If type is "none" the tree is returned with the bootstrap values assigned to the node labels.
