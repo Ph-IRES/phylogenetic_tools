@@ -168,6 +168,11 @@ aln2tsv <-
         }),
         stringsAsFactors = FALSE,
         check.names = FALSE
+      ) %>%
+      mutate(
+        # run only on character columns
+        across(where(is.character),
+               ~ na_if(trimws(.x), "NA"))
       )
     
     # add "country" column which is needed by phylogenetic tools rename script
