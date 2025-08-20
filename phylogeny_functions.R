@@ -5,7 +5,7 @@
 cran_packages <- c(
   "tidyverse", "BiocManager", "janitor", "phangorn", "styler", "ape",
   "tinytex", "igraph", "ips", "seqinr", "ggtext", "bios2mds", "rgl",
-  "RCurl", "devtools", "ggrepel", "haplotypes", "tidytree", "ggimage"
+  "RCurl", "devtools", "ggrepel", "haplotypes", "tidytree", "ggimage", "stringr"
 )
 
 special_packages <- list(
