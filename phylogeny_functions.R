@@ -216,6 +216,54 @@ alignFastaFile <-
       msaConvert("phangorn::phyDat") # pd format
   }
 
+#### Filter Genbank Seqs & Select Outgroup
+
+# ---- helper: interactive filter with outgroup ----
+filter_phyDat_with_outgroup <- function(x,
+                                        genera = c("Ischnura", "Amorphostigma", "Pacificagrion"),
+                                        case_ignore = TRUE,
+                                        choose_from = c("non_target", "all")) {
+  stopifnot(inherits(x, "phyDat"))
+  choose_from <- match.arg(choose_from)
+  
+  seq_names <- names(x)
+  if (is.null(seq_names) || length(seq_names) == 0L) {
+    stop("No sequence names found in the phyDat object.")
+  }
+  
+  # Build regex for target genera
+  pat <- paste0("(", paste(genera, collapse = "|"), ")")
+  keep_target <- str_detect(seq_names, regex(pat, ignore_case = case_ignore))
+  
+  # Candidate list for outgroup selection
+  candidates <- if (choose_from == "non_target") {
+    seq_names[!keep_target]
+  } else {
+    seq_names
+  }
+  
+  if (length(candidates) == 0L) {
+    message("All sequences already match target genera; selecting outgroup from all names instead.")
+    candidates <- seq_names
+  }
+  
+  # Present an interactive menu
+  cat("\nSelect ONE outgroup sequence:\n")
+  og_idx <- utils::menu(choices = candidates, title = "Outgroup choice (enter number):", graphics = FALSE)
+  
+  if (og_idx == 0) {
+    stop("Outgroup selection canceled (received 0).")
+  }
+  outgroup_name <- candidates[[og_idx]]
+  message("Outgroup selected: ", outgroup_name)
+  
+  # Build final keep set: targets OR the chosen outgroup
+  keep_names <- union(seq_names[keep_target], outgroup_name)
+  
+  # Subset phyDat by name (phyDat supports name-based subsetting)
+  x[keep_names]
+}
+
 #### WRANGLE DATA FROM FASTA INTO TREE ####
 
 fasta2tree <-
